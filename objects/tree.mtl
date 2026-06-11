@@ -1,0 +1,27 @@
+# Blender MTL File: 'lemon trees.blend'
+# Material Count: 2
+
+newmtl Lemon_Bark
+Ns 62.745098
+Ka 0.500000 0.500000 0.500000
+Kd 0.800000 0.800000 0.800000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 3
+map_Kd Z:\Numena Store Assets\_Working\_Unity Projects\Project_Plants-AssetStore-unity2017\Assets\Numena\Plants\Lemon\Source\Textures\Lemon Bark Color.png
+map_Bump -bm 0.350042 Z:\\Numena Store Assets\\_Unprocessed\\sourceimages\\bark07_NORMAL.png
+
+newmtl Lemon_Branch
+Ns 200.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.000000 0.000000 0.000000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 0.000000
+illum 9
+map_Kd Z:\Numena Store Assets\_Working\_Unity Projects\Project_Plants-AssetStore-unity2017\Assets\Numena\Plants\Lemon\Source\Textures\Lemon Branch Color.png
+map_Bump -bm 0.350042 Z:\\Numena Store Assets\\_Unprocessed\\sourceimages\\_2_4_lemon_branches_NORMAL.png
+map_d Z:\\Numena Store Assets\\_Unprocessed\\sourceimages\\_2_4_lemon_branches_COLOR.png

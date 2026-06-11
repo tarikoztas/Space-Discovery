@@ -1,0 +1,9 @@
+# Python derleme ve önbellek (cache) klasörleri
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# İşletim sistemi gizli dosyaları (Opsiyonel ama iyi olur)
+.DS_Store
+Thumbs.db
