@@ -1,126 +1,171 @@
+import os
 import pygame
 from OpenGL.GL import *
-import os
 
 class OBJModel:
-    def __init__(self, filename, swapyz=False):
-        """
-        Wavefront .obj dosyalarını okuyan ve OpenGL texture işlemlerini 
-        ders slaytlarına (OpenGL Texture.pptx) uygun olarak gerçekleştiren yükleyici sınıfı.
-        """
+    def __init__(self, filename):
         self.vertices = []
-        self.normals = []
         self.texcoords = []
+        self.normals = []
         self.faces = []
-        self.gl_list = 0
-        self.textures = {}
-
-        # Dosyanın bulunduğu dizini bul (Texture yollarını çözmek için)
+        self.mtl_data = {}
+        self.current_material = None
         self.dirname = os.path.dirname(filename)
+        
+        self.fallback_texture_id = None
+        self.detect_fallback_texture()
+        
+        self.gl_list = 0
+        self.load_obj(filename)
+        self.compile_to_gl_list()
 
-        # 1. OBJ Dosyasını Ayrıştırma (Parsing)
+    def detect_fallback_texture(self):
+        """MTL dosyası barındırmayan klasörler için ana görseli tespit eder"""
+        if not os.path.exists(self.dirname):
+            return
+        for file in os.listdir(self.dirname):
+            if file.lower().endswith(('.jpg', '.jpeg', '.png')) and "lights" not in file.lower():
+                # console1.jpg veya benzeri ana dokuyu seçer
+                if "1.2" not in file: 
+                    full_path = os.path.join(self.dirname, file)
+                    self.fallback_texture_id = self.load_texture(full_path)
+                    break
+
+    def load_mtl(self, mtl_filename):
+        """Modelin materyal (.mtl) dosyasını ve ilişkili texture görselini yükler"""
+        path = os.path.join(self.dirname, mtl_filename)
+        if not os.path.exists(path):
+            return
+            
+        current_mtl = None
+        with open(path, "r") as f:
+            for line in f:
+                if line.startswith("#") or not line.strip():
+                    continue
+                parts = line.split()
+                
+                if parts[0] == "newmtl":
+                    current_mtl = parts[1]
+                    self.mtl_data[current_mtl] = {
+                        "Kd": [1.0, 1.0, 1.0],
+                        "texture_id": None
+                    }
+                elif current_mtl and parts[0] == "Kd":
+                    self.mtl_data[current_mtl]["Kd"] = [float(x) for x in parts[1:4]]
+                elif current_mtl and parts[0] == "map_Kd":
+                    tex_name = " ".join(parts[1:])
+                    tex_path = os.path.join(self.dirname, tex_name)
+                    self.mtl_data[current_mtl]["texture_id"] = self.load_texture(tex_path)
+
+    def load_texture(self, path):
+        """Görsel dosyasını OpenGL doku belleğine aktarır"""
+        if not os.path.exists(path):
+            return None
+        try:
+            img = pygame.image.load(path)
+            img_data = pygame.image.tostring(img, "RGBA", 1)
+            w, h = img.get_width(), img.get_height()
+            
+            tex_id = glGenTextures(1)
+            glBindTexture(GL_TEXTURE_2D, tex_id)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, img_data)
+            return tex_id
+        except Exception as e:
+            print(f"Doku yükleme hatası ({path}): {e}")
+            return None
+
+    def load_obj(self, filename):
         if not os.path.exists(filename):
-            print(f"Hata: {filename} dosyası bulunamadı!")
+            print(f"Hata: Model dosyası bulunamadı -> {filename}")
             return
 
         with open(filename, "r") as f:
             for line in f:
-                if line.startswith('#'): continue
-                values = line.split()
-                if not values: continue
+                if line.startswith("#") or not line.strip():
+                    continue
+                parts = line.split()
                 
-                if values[0] == 'v': # Vertex (Tepe Noktası) koordinatları
-                    v = list(map(float, values[1:4]))
-                    if swapyz:
-                        v = [v[0], v[2], v[1]]
-                    self.vertices.append(v)
-                elif values[0] == 'vn': # Normaller (Işıklandırma hesapları için)
-                    v = list(map(float, values[1:4]))
-                    if swapyz:
-                        v = [v[0], v[2], v[1]]
-                    self.normals.append(v)
-                elif values[0] == 'vt': # Texture (Kaplama) Koordinatları
-                    # Ders slaytındaki (s, t) haritalama düzlemi
-                    self.texcoords.append(list(map(float, values[1:3])))
-                elif values[0] == 'f': # Yüzeyler (Faces)
-                    face = []
-                    texcoords = []
-                    norms = []
-                    for v in values[1:]:
-                        w = v.split('/')
-                        face.append(int(w[0]))
-                        if len(w) >= 2 and len(w[1]) > 0:
-                            texcoords.append(int(w[1]))
-                        else:
-                            texcoords.append(0)
-                        if len(w) >= 3 and len(w[2]) > 0:
-                            norms.append(int(w[2]))
-                        else:
-                            norms.append(0)
-                    self.faces.append((face, norms, texcoords))
+                if parts[0] == "mtllib":
+                    self.load_mtl(" ".join(parts[1:]))
+                elif parts[0] == "v":
+                    self.vertices.append([float(x) for x in parts[1:4]])
+                elif parts[0] == "vt":
+                    self.texcoords.append([float(x) for x in parts[1:3]])
+                elif parts[0] == "vn":
+                    self.normals.append([float(x) for x in parts[1:4]])
+                elif parts[0] == "usemtl":
+                    self.current_material = parts[1]
+                elif parts[0] == "f":
+                    face_vertices = []
+                    for p in parts[1:]:
+                        vals = p.split('/')
+                        v_idx = int(vals[0]) - 1
+                        vt_idx = int(vals[1]) - 1 if len(vals) > 1 and vals[1] else None
+                        vn_idx = int(vals[2]) - 1 if len(vals) > 2 and vals[2] else None
+                        face_vertices.append((v_idx, vt_idx, vn_idx))
+                    self.faces.append((face_vertices, self.current_material))
 
-        # 2. Ders Slaytlarına Uygun OpenGL Display List Oluşturma
-        # Modeli her karede baştan CPU ile okumamak için ekran kartı hafızasında liste oluşturuyoruz
+    def compile_to_gl_list(self):
         self.gl_list = glGenLists(1)
         glNewList(self.gl_list, GL_COMPILE)
         
-        # Modele ait aktif bir kaplama varsa etkinleştir
         glEnable(GL_TEXTURE_2D)
+        last_bound_texture = None
+        current_texture_state = True
         
-        glBegin(GL_TRIANGLES)
-        for face in self.faces:
-            vertices, normals, texture_coords = face
-            for i in range(len(vertices)):
-                # Eğer modelin normalleri varsa ışıklandırma için bildir
-                if normals[i] > 0:
-                    glNormal3fv(self.normals[normals[i] - 1])
-                
-                # Ders slaytındaki glTexCoord2d kuralı: Çizimden hemen önce kaplama koordinatı verilir
-                if texture_coords[i] > 0:
-                    glTexCoord2f(self.texcoords[texture_coords[i] - 1][0], 
-                                 self.texcoords[texture_coords[i] - 1][1])
-                
-                # Tepe noktasını çiz
-                glVertex3fv(self.vertices[vertices[i] - 1])
-        glEnd()
-        
+        for face_vertices, mat_name in self.faces:
+            target_texture = None
+            use_lighting_color = False
+            kd_color = [1.0, 1.0, 1.0]
+            
+            if mat_name in self.mtl_data:
+                mat = self.mtl_data[mat_name]
+                if mat["texture_id"] is not None:
+                    target_texture = mat["texture_id"]
+                else:
+                    use_lighting_color = True
+                    kd_color = mat["Kd"]
+            elif self.fallback_texture_id is not None and len(self.texcoords) > 0:
+                target_texture = self.fallback_texture_id
+
+            if target_texture is not None:
+                if not current_texture_state:
+                    glEnable(GL_TEXTURE_2D)
+                    current_texture_state = True
+                if target_texture != last_bound_texture:
+                    glBindTexture(GL_TEXTURE_2D, target_texture)
+                    last_bound_texture = target_texture
+                glColor3f(1.0, 1.0, 1.0)
+            else:
+                if current_texture_state:
+                    glDisable(GL_TEXTURE_2D)
+                    current_texture_state = False
+                    last_bound_texture = None
+                if use_lighting_color:
+                    glColor3fv(kd_color)
+                else:
+                    glColor3f(0.6, 0.6, 0.6)
+
+            if len(face_vertices) == 3:
+                glBegin(GL_TRIANGLES)
+            elif len(face_vertices) == 4:
+                glBegin(GL_QUADS)
+            else:
+                glBegin(GL_POLYGON)
+
+            for v_idx, vt_idx, vn_idx in face_vertices:
+                if vn_idx is not None and vn_idx < len(self.normals):
+                    glNormal3fv(self.normals[vn_idx])
+                if vt_idx is not None and vt_idx < len(self.texcoords) and current_texture_state:
+                    glTexCoord2fv(self.texcoords[vt_idx])
+                if v_idx < len(self.vertices):
+                    glVertex3fv(self.vertices[v_idx])
+            glEnd()
+            
+        glEnable(GL_TEXTURE_2D)
         glEndList()
 
-    def load_texture(self, texture_name, image_path):
-        """
-        Ders sunumundaki (OpenGL Texture.pptx) 4 temel adımı uygulayan kaplama yükleme fonksiyonu:
-        1. glGenTextures, 2. glBindTexture, 3. Parametrelerin Ayarlanması, 4. glTexImage2D
-        """
-        if not os.path.exists(image_path):
-            print(f"Görsel bulunamadı: {image_path}")
-            return False
-
-        # Pygame yardımıyla resmi piksellere döküyoruz
-        img = pygame.image.load(image_path)
-        img_data = pygame.image.tostring(img, "RGBA", 1)
-        width, height = img.get_width(), img.get_height()
-
-        # Adım 1: Texture ID üretme (Slayt sayfa 15)
-        tex_id = glGenTextures(1)
-        
-        # Adım 2: Texture bağlama/aktif etme
-        glBindTexture(GL_TEXTURE_2D, tex_id)
-        
-        # Adım 3: Küçültme ve Büyütme Filtrelerini Ayarlama (Slayt sayfa 19 - GL_LINEAR kuralı)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
-
-        # Adım 4: Piksel verilerini Ekran Kartı Belleğine Gönderme (Slayt sayfa 16)
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, img_data)
-        
-        # İleride çağırmak üzere texture ID'sini hafızada sakla
-        self.textures[texture_name] = tex_id
-        return tex_id
-
-    def render(self, texture_name=None):
-        """Modeli ekrana basan fonksiyon"""
-        if texture_name and texture_name in self.textures:
-            glBindTexture(GL_TEXTURE_2D, self.textures[texture_name])
+    def render(self):
         glCallList(self.gl_list)

@@ -52,6 +52,7 @@ class SpaceDiscoveryGame:
         self.collision_boxes = []
         self.base_display_list = 0
         self.terrain_display_list = 0
+        self.spaceship_display_list = 0
         
         # Fizik motorunu kur ve GPU grafik listelerini derle
         self.build_base_architecture()
@@ -85,6 +86,7 @@ class SpaceDiscoveryGame:
         glLightfv(GL_LIGHT1, GL_DIFFUSE, [0.4, 0.6, 0.9, 1.0])
 
     def build_base_architecture(self):
+        """%100 FİZİK KİLİTLEMESİ: Sandalyeler ve dışarıdaki uzay gemisi katı cisme dönüştürüldü"""
         self.collision_boxes.clear()
         
         # 🏢 Koridor Duvar Sınırları
@@ -94,28 +96,37 @@ class SpaceDiscoveryGame:
         self.collision_boxes.append(AABB(2.45, 2.55, 0.0, 4.0, -5.0, 3.0))   
         
         # 🏢 Sol Oda Ana Mimari Duvar Fiziği
-        self.collision_boxes.append(AABB(-14.5, -2.5, 0.0, 4.0, -1.0, -0.95)) 
-        self.collision_boxes.append(AABB(-14.5, -2.5, 0.0, 4.0, 10.95, 11.0)) 
-        self.collision_boxes.append(AABB(-14.5, -14.45, 0.0, 4.0, -1.0, 11.0)) 
-        self.collision_boxes.append(AABB(-6.0, -2.5, 0.0, 4.0, 3.0, 3.05))   
-        self.collision_boxes.append(AABB(-6.0, -2.5, 0.0, 4.0, 6.95, 7.0))   
+        self.collision_boxes.append(AABB(-14.5, -2.5, 0.0, 4.0, -1.0, -0.95)) # Arka Duvar
+        self.collision_boxes.append(AABB(-14.5, -2.5, 0.0, 4.0, 10.95, 11.0)) # Ön Duvar
+        self.collision_boxes.append(AABB(-14.5, -14.45, 0.0, 4.0, -1.0, 11.0)) # En Sol Dış Duvar
+        self.collision_boxes.append(AABB(-6.0, -2.5, 0.0, 4.0, 3.0, 3.05))   # Kapı Sol Kanat
+        self.collision_boxes.append(AABB(-6.0, -2.5, 0.0, 4.0, 6.95, 7.0))   # Kapı Sağ Kanat
 
         # Console 1 Fiziği
         self.collision_boxes.append(AABB(-14.5, -13.0, 0.0, 3.5, 3.2, 6.8))   
 
         # Sol Masa Kutu Fiziği
         self.collision_boxes.append(AABB(-10.5, -8.5, 0.0, 1.3, 4.0, 6.0)) 
+        
+        # 🚨 SOL SANDALYE FİZİĞİ (Katı cisim yapıldı)
+        self.collision_boxes.append(AABB(-10.0, -9.0, 0.0, 1.2, 4.6, 5.4))
 
         # 🏢 Sağ Oda Ana Mimari Duvar Fiziği
         self.collision_boxes.append(AABB(2.5, 14.5, 0.0, 4.0, -1.0, -0.95))  
         self.collision_boxes.append(AABB(2.5, 14.5, 0.0, 4.0, 10.95, 11.0))  
-        self.collision_boxes.append(AABB(14.45, 14.5, 0.0, 4.0, -1.0, 11.0)) 
-        self.collision_boxes.append(AABB(2.5, 6.0, 0.0, 4.0, 3.0, 3.05))     
-        self.collision_boxes.append(AABB(2.5, 6.0, 0.0, 4.0, 6.95, 7.0))     
-        self.collision_boxes.append(AABB(12.5, 14.5, 0.5, 4.0, 2.5, 7.5))    
+        self.collision_boxes.append(AABB(14.45, 14.5, 0.0, 4.0, -1.0, 11.0)) # En Sağ Dış Duvar
+        self.collision_boxes.append(AABB(2.5, 6.0, 0.0, 4.0, 3.0, 3.05))     # Kapı Sol Kanat
+        self.collision_boxes.append(AABB(2.5, 6.0, 0.0, 4.0, 6.95, 7.0))     # Kapı Sağ Kanat
+        self.collision_boxes.append(AABB(12.5, 14.5, 0.5, 4.0, 2.5, 7.5))    # Console 2 Fiziği
 
         # Sağ Masa Kutu Fiziği
         self.collision_boxes.append(AABB(8.5, 10.5, 0.0, 1.3, 4.0, 6.0)) 
+        
+        # 🚨 SAĞ SANDALYE FİZİĞİ (Katı cisim yapıldı)
+        self.collision_boxes.append(AABB(9.0, 10.0, 0.0, 1.2, 4.6, 5.4))
+
+        # 🚨 DEVASA UZAY GEMİSİ FİZİĞİ (Dışarıdaki geminin içinden geçiş tamamen engellendi)
+        self.collision_boxes.append(AABB(-4.0, 4.0, 0.0, 5.0, -120.0, -88.0))
 
     def compile_graphics_lists(self):
         self.terrain_display_list = glGenLists(1)
@@ -126,6 +137,20 @@ class SpaceDiscoveryGame:
         self.base_display_list = glGenLists(1)
         glNewList(self.base_display_list, GL_COMPILE)
         self.render_optimized_base_and_models()
+        glEndList()
+        
+        self.spaceship_display_list = glGenLists(1)
+        glNewList(self.spaceship_display_list, GL_COMPILE)
+        glPushMatrix()
+        glEnable(GL_TEXTURE_2D)
+        if self.model_spaceship.fallback_texture_id is not None:
+            glBindTexture(GL_TEXTURE_2D, self.model_spaceship.fallback_texture_id)
+            glColor3f(1.0, 1.0, 1.0)
+            
+        glTranslatef(0.0, self.get_terrain_height(0.0, -100.0) + 0.5, -100.0) 
+        glScalef(4.0, 4.0, 4.0) 
+        self.model_spaceship.render()
+        glPopMatrix()
         glEndList()
 
     def get_terrain_height(self, x, z):
@@ -186,6 +211,7 @@ class SpaceDiscoveryGame:
         glEnable(GL_TEXTURE_2D)
 
     def render_optimized_base_and_models(self):
+        glColor3f(1.0, 1.0, 1.0)
         if self.textures["wall_texture"]:
             glEnable(GL_TEXTURE_2D)
             glBindTexture(GL_TEXTURE_2D, self.textures["wall_texture"])
@@ -193,7 +219,7 @@ class SpaceDiscoveryGame:
             glDisable(GL_TEXTURE_2D)
             glColor3f(0.2, 0.22, 0.25)
             
-        # 🏢 1. KORİDOR DUVARLARI (Texture Kaplamalı)
+        # 🏢 Koridor Duvarları Kaplamalı
         glBegin(GL_QUADS)
         glNormal3f(1.0, 0.0, 0.0)
         glTexCoord2f(0.0, 0.0); glVertex3f(-2.5, 0.0, 7.0)
@@ -217,17 +243,27 @@ class SpaceDiscoveryGame:
         glTexCoord2f(0.0, 1.0); glVertex3f(2.5, 4.0, -5.0)
         glEnd()
         
-        self.draw_wall_segment(-2.5, 4.0, -5.0, 2.5, 4.0, 20.0) # Tavan
+        self.draw_wall_segment(-2.5, 4.0, -5.0, 2.5, 4.0, 20.0) 
         
-        # 🏢 2. ODALARIN ANA MIMARI DUVARLARI
-        # Sol Oda Çizimleri (Merkez: -8.5, 5.0)
-        self.draw_wall_segment(-14.5, 0.0, -1.0, -2.5, 4.0, -1.0) # Arka Duvar
-        self.draw_wall_segment(-14.5, 0.0, 11.0, -2.5, 4.0, 11.0) # Ön Duvar
-        self.draw_wall_segment(-6.0, 0.0, 3.0, -2.5, 4.0, 3.0)    # Kapı sol bölme (Z doğrultusunda)
-        self.draw_wall_segment(-6.0, 0.0, 7.0, -2.5, 4.0, 7.0)    # Kapı sağ bölme (Z doğrultusunda)
-        self.draw_wall_segment(-14.5, 4.0, -1.0, -2.5, 4.0, 11.0) # Tavan
-        
-        # DÜZELTME 1: Sol odanın en solundaki kapatıcı dış duvar tamamen kaplandı (X doğrultusunda)
+        room_list = [(-8.5, 0.0, 5.0), (8.5, 0.0, 5.0)]
+        for rx, ry, rz in room_list:
+            self.draw_wall_segment(rx-6.0, 0.0, rz-6.0, rx+6.0, 4.0, rz-6.0) 
+            self.draw_wall_segment(rx-6.0, 0.0, rz+6.0, rx+6.0, 4.0, rz+6.0) 
+            self.draw_wall_segment(rx-6.0, 4.0, rz-6.0, rx+6.0, 4.0, rz+6.0) 
+            
+            if rx < 0:
+                self.draw_wall_segment(rx-6.0, 0.0, rz-6.0, rx-6.0, 4.0, rz+6.0) 
+                self.draw_wall_segment(-6.0, 0.0, rz-2.0, -2.5, 4.0, rz-2.0)    
+                self.draw_wall_segment(-6.0, 0.0, rz+2.0, -2.5, 4.0, rz+2.0)    
+            else:
+                self.draw_wall_segment(rx+6.0, 0.0, rz-6.0, rx+6.0, 4.0, rz+6.0) 
+                self.draw_wall_segment(2.5, 0.0, rz-2.0, 6.0, 4.0, rz-2.0)     
+                self.draw_wall_segment(2.5, 0.0, rz+2.0, 6.0, 4.0, rz+2.0)     
+                
+        # Odaların kapatıcı dış yan duvar kaplamaları
+        if self.textures["wall_texture"]:
+            glEnable(GL_TEXTURE_2D)
+            glBindTexture(GL_TEXTURE_2D, self.textures["wall_texture"])
         glBegin(GL_QUADS)
         glNormal3f(1.0, 0.0, 0.0)
         glTexCoord2f(0.0, 0.0); glVertex3f(-14.5, 0.0, -1.0)
@@ -236,14 +272,6 @@ class SpaceDiscoveryGame:
         glTexCoord2f(0.0, 1.0); glVertex3f(-14.5, 4.0, -1.0)
         glEnd()
 
-        # Sağ Oda Çizimleri (Merkez: 8.5, 5.0)
-        self.draw_wall_segment(2.5, 0.0, -1.0, 14.5, 4.0, -1.0)  # Arka Duvar
-        self.draw_wall_segment(2.5, 0.0, 11.0, 14.5, 4.0, 11.0)  # Ön Duvar
-        self.draw_wall_segment(2.5, 0.0, 3.0, 6.0, 4.0, 3.0)     # Kapı sol bölme (Z doğrultusunda)
-        self.draw_wall_segment(2.5, 0.0, 7.0, 6.0, 4.0, 7.0)     # Kapı sağ bölme (Z doğrultusunda)
-        self.draw_wall_segment(2.5, 4.0, -1.0, 14.5, 4.0, 11.0)  # Tavan
-        
-        # DÜZELTME 2: Sağ odanın en sağındaki kapatıcı dış duvar tamamen kaplandı (X doğrultusunda)
         glBegin(GL_QUADS)
         glNormal3f(-1.0, 0.0, 0.0)
         glTexCoord2f(0.0, 0.0); glVertex3f(14.5, 0.0, -1.0)
@@ -252,7 +280,7 @@ class SpaceDiscoveryGame:
         glTexCoord2f(0.0, 1.0); glVertex3f(14.5, 4.0, -1.0)
         glEnd()
                 
-        # Üssün İç Taban Zemini (Düz Koyu Gri)
+        # Üssün İç Taban Zemini
         glDisable(GL_TEXTURE_2D)
         glColor3f(0.12, 0.12, 0.14)
         glBegin(GL_QUADS)
@@ -352,12 +380,7 @@ class SpaceDiscoveryGame:
         glCallList(self.terrain_display_list)
         glCallList(self.base_display_list)
         
-        # Uzay Gemisi
-        glPushMatrix()
-        glTranslatef(0.0, self.get_terrain_height(0.0, -100.0) + 0.5, -100.0) 
-        glScalef(4.0, 4.0, 4.0) 
-        self.model_spaceship.render()
-        glPopMatrix()
+        glCallList(self.spaceship_display_list)
 
         for box in self.collision_boxes:
             box.draw_debug()
