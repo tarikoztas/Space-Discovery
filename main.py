@@ -85,7 +85,6 @@ class SpaceDiscoveryGame:
         glLightfv(GL_LIGHT1, GL_DIFFUSE, [0.4, 0.6, 0.9, 1.0])
 
     def build_base_architecture(self):
-        """KUTU BOYUTLARI HİÇ DEĞİŞTİRİLMEDEN fizik sınırları tam koordinatlarında korundu"""
         self.collision_boxes.clear()
         
         # 🏢 Koridor Duvar Sınırları
@@ -101,10 +100,10 @@ class SpaceDiscoveryGame:
         self.collision_boxes.append(AABB(-6.0, -2.5, 0.0, 4.0, 3.0, 3.05))   
         self.collision_boxes.append(AABB(-6.0, -2.5, 0.0, 4.0, 6.95, 7.0))   
 
-        # Console 1 Fiziği (Kutu boyutları tamamen sabit tutuldu)
+        # Console 1 Fiziği
         self.collision_boxes.append(AABB(-14.5, -13.0, 0.0, 3.5, 3.2, 6.8))   
 
-        # Sol Masa Kutu Fiziği (Boyutlar tamamen aynı bırakıldı)
+        # Sol Masa Kutu Fiziği
         self.collision_boxes.append(AABB(-10.5, -8.5, 0.0, 1.3, 4.0, 6.0)) 
 
         # 🏢 Sağ Oda Ana Mimari Duvar Fiziği
@@ -113,9 +112,9 @@ class SpaceDiscoveryGame:
         self.collision_boxes.append(AABB(14.45, 14.5, 0.0, 4.0, -1.0, 11.0)) 
         self.collision_boxes.append(AABB(2.5, 6.0, 0.0, 4.0, 3.0, 3.05))     
         self.collision_boxes.append(AABB(2.5, 6.0, 0.0, 4.0, 6.95, 7.0))     
-        self.collision_boxes.append(AABB(12.5, 14.5, 0.5, 4.0, 2.5, 7.5))    # Console 2 Fiziği
+        self.collision_boxes.append(AABB(12.5, 14.5, 0.5, 4.0, 2.5, 7.5))    
 
-        # Sağ Masa Kutu Fiziği (Boyutlar tamamen aynı bırakıldı)
+        # Sağ Masa Kutu Fiziği
         self.collision_boxes.append(AABB(8.5, 10.5, 0.0, 1.3, 4.0, 6.0)) 
 
     def compile_graphics_lists(self):
@@ -194,7 +193,7 @@ class SpaceDiscoveryGame:
             glDisable(GL_TEXTURE_2D)
             glColor3f(0.2, 0.22, 0.25)
             
-        # 🏢 Koridor Duvarları Kaplamalı
+        # 🏢 1. KORİDOR DUVARLARI (Texture Kaplamalı)
         glBegin(GL_QUADS)
         glNormal3f(1.0, 0.0, 0.0)
         glTexCoord2f(0.0, 0.0); glVertex3f(-2.5, 0.0, 7.0)
@@ -218,23 +217,42 @@ class SpaceDiscoveryGame:
         glTexCoord2f(0.0, 1.0); glVertex3f(2.5, 4.0, -5.0)
         glEnd()
         
-        self.draw_wall_segment(-2.5, 4.0, -5.0, 2.5, 4.0, 20.0) 
+        self.draw_wall_segment(-2.5, 4.0, -5.0, 2.5, 4.0, 20.0) # Tavan
         
-        room_list = [(-8.5, 0.0, 5.0), (8.5, 0.0, 5.0)]
-        for rx, ry, rz in room_list:
-            self.draw_wall_segment(rx-6.0, 0.0, rz-6.0, rx+6.0, 4.0, rz-6.0) 
-            self.draw_wall_segment(rx-6.0, 0.0, rz+6.0, rx+6.0, 4.0, rz+6.0) 
-            self.draw_wall_segment(rx-6.0, 4.0, rz-6.0, rx+6.0, 4.0, rz+6.0) 
-            
-            if rx < 0:
-                self.draw_wall_segment(rx-6.0, 0.0, rz-6.0, rx-6.0, 4.0, rz+6.0) 
-                self.draw_wall_segment(-6.0, 0.0, rz-2.0, -2.5, 4.0, rz-2.0)    
-                self.draw_wall_segment(-6.0, 0.0, rz+2.0, -2.5, 4.0, rz+2.0)    
-            else:
-                self.draw_wall_segment(rx+6.0, 0.0, rz-6.0, rx+6.0, 4.0, rz+6.0) 
-                self.draw_wall_segment(2.5, 0.0, rz-2.0, 6.0, 4.0, rz-2.0)     
-                self.draw_wall_segment(2.5, 0.0, rz+2.0, 6.0, 4.0, rz+2.0)     
+        # 🏢 2. ODALARIN ANA MIMARI DUVARLARI
+        # Sol Oda Çizimleri (Merkez: -8.5, 5.0)
+        self.draw_wall_segment(-14.5, 0.0, -1.0, -2.5, 4.0, -1.0) # Arka Duvar
+        self.draw_wall_segment(-14.5, 0.0, 11.0, -2.5, 4.0, 11.0) # Ön Duvar
+        self.draw_wall_segment(-6.0, 0.0, 3.0, -2.5, 4.0, 3.0)    # Kapı sol bölme (Z doğrultusunda)
+        self.draw_wall_segment(-6.0, 0.0, 7.0, -2.5, 4.0, 7.0)    # Kapı sağ bölme (Z doğrultusunda)
+        self.draw_wall_segment(-14.5, 4.0, -1.0, -2.5, 4.0, 11.0) # Tavan
+        
+        # DÜZELTME 1: Sol odanın en solundaki kapatıcı dış duvar tamamen kaplandı (X doğrultusunda)
+        glBegin(GL_QUADS)
+        glNormal3f(1.0, 0.0, 0.0)
+        glTexCoord2f(0.0, 0.0); glVertex3f(-14.5, 0.0, -1.0)
+        glTexCoord2f(4.0, 0.0); glVertex3f(-14.5, 0.0, 11.0)
+        glTexCoord2f(4.0, 1.0); glVertex3f(-14.5, 4.0, 11.0)
+        glTexCoord2f(0.0, 1.0); glVertex3f(-14.5, 4.0, -1.0)
+        glEnd()
+
+        # Sağ Oda Çizimleri (Merkez: 8.5, 5.0)
+        self.draw_wall_segment(2.5, 0.0, -1.0, 14.5, 4.0, -1.0)  # Arka Duvar
+        self.draw_wall_segment(2.5, 0.0, 11.0, 14.5, 4.0, 11.0)  # Ön Duvar
+        self.draw_wall_segment(2.5, 0.0, 3.0, 6.0, 4.0, 3.0)     # Kapı sol bölme (Z doğrultusunda)
+        self.draw_wall_segment(2.5, 0.0, 7.0, 6.0, 4.0, 7.0)     # Kapı sağ bölme (Z doğrultusunda)
+        self.draw_wall_segment(2.5, 4.0, -1.0, 14.5, 4.0, 11.0)  # Tavan
+        
+        # DÜZELTME 2: Sağ odanın en sağındaki kapatıcı dış duvar tamamen kaplandı (X doğrultusunda)
+        glBegin(GL_QUADS)
+        glNormal3f(-1.0, 0.0, 0.0)
+        glTexCoord2f(0.0, 0.0); glVertex3f(14.5, 0.0, -1.0)
+        glTexCoord2f(4.0, 0.0); glVertex3f(14.5, 0.0, 11.0)
+        glTexCoord2f(4.0, 1.0); glVertex3f(14.5, 4.0, 11.0)
+        glTexCoord2f(0.0, 1.0); glVertex3f(14.5, 4.0, -1.0)
+        glEnd()
                 
+        # Üssün İç Taban Zemini (Düz Koyu Gri)
         glDisable(GL_TEXTURE_2D)
         glColor3f(0.12, 0.12, 0.14)
         glBegin(GL_QUADS)
@@ -262,7 +280,6 @@ class SpaceDiscoveryGame:
         self.model_chair.render()
         glPopMatrix()
         
-        # KOD GÜNCELLEMESİ: Tam istediğin yeni kaydırılmış sol duvar koordinatı (rx_sol - 5.0) uygulandı
         glPushMatrix()
         glBindTexture(GL_TEXTURE_2D, 0) 
         glTranslatef(rx_sol - 5.0, ry_sol, rz_sol)
@@ -308,7 +325,6 @@ class SpaceDiscoveryGame:
         self.camera.process_mouse_movement(mouse_dx, -mouse_dy)
 
     def update(self):
-        """HASSAS FİZİK MOTORU: Çarpışma algılama hassasiyeti (radius) jilet gibi kilitlendi"""
         keys = pygame.key.get_pressed()
         old_position = self.camera.position.copy()
         self.camera.process_keyboard(keys)
@@ -317,7 +333,6 @@ class SpaceDiscoveryGame:
         
         collision_detected = False
         for box in self.collision_boxes:
-            # Tolerans eşiği radius=0.25 yapılarak nesnelerin içine sızma hatası tamamen elendi
             if box.check_collision(px, py, pz, radius=0.25):
                 self.camera.position = old_position
                 collision_detected = True
