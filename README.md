@@ -72,8 +72,8 @@ Genel Kontroller
 ESC: Oyundan çıkış yapar.
 
 ### 📊 Başarı Kriterleri (Final Aşaması)
-Görevin başarıyla tamamlanabilmesi için uzay gemisi 12.0 irtifa sınırına ulaştığı anda:
+* Görevin başarıyla tamamlanabilmesi için uzay gemisi 12.0 irtifa sınırına ulaştığı anda:
 
-İniş hızının 1.5 M/S değerinden az olması gerekir (Yumuşak İniş).
+* İniş hızının 1.5 M/S değerinden az olması gerekir (Yumuşak İniş).
 
-Geminin yatay X koordinatının ±6.0 sınırları içinde, yani tam sarı rampanın üzerinde olması gerekir (İsabetli İniş).
+* Geminin yatay X koordinatının ±6.0 sınırları içinde, yani tam sarı rampanın üzerinde olması gerekir (İsabetli İniş).
