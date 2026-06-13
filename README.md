@@ -29,6 +29,7 @@ Terminal veya komut satırını açarak aşağıdaki komut yardımıyla gerekli 
 
 ```bash
 pip install pygame PyOpenGL PyOpenGL_accelerate numpy
+```
 
 ### 2. Dosya Yapısı
 Kodun hatasız çalışabilmesi için .obj modellerinin ve kaplamaların (textures) kök dizinde şu yapıda bulunması şarttır:
@@ -49,7 +50,7 @@ Kodun hatasız çalışabilmesi için .obj modellerinin ve kaplamaların (textur
 Proje dizinine gelip ana dosyayı çalıştırın:
 ```bash
 python main.py
-
+```
 
 🎮 Kontrol Tuşları
 1. Mars Keşif Modu Kontrolleri
