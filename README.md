@@ -33,6 +33,7 @@ pip install pygame PyOpenGL PyOpenGL_accelerate numpy
 
 ### 2. Dosya Yapısı
 Kodun hatasız çalışabilmesi için .obj modellerinin ve kaplamaların (textures) kök dizinde şu yapıda bulunması şarttır:
+```bash
 ├── main.py
 ├── camera.py
 ├── obj_loader.py
@@ -45,6 +46,7 @@ Kodun hatasız çalışabilmesi için .obj modellerinin ve kaplamaların (textur
 └── textures/
     ├── mars_ground.jpg
     └── spaceship_walls.jpg
+```
 
 ### 3. Oyunu Başlatma
 Proje dizinine gelip ana dosyayı çalıştırın:
