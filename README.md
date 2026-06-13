@@ -56,26 +56,22 @@ python main.py
 
 🎮 Kontrol Tuşları
 1. Mars Keşif Modu Kontrolleri
-W, A, S, D: Hareket Etme (İleri, Sol, Geri, Sağ)
-
-Mouse (Fare): Bakış Açısını Değiştirme (360 Derece FP Kamera)
-
-E: Uzay gemisine yaklaşınca uçuş modunu (kalkışı) başlatma.
+    W, A, S, D: Hareket Etme (İleri, Sol, Geri, Sağ)
+    Mouse (Fare): Bakış Açısını Değiştirme (360 Derece FP Kamera)
+    E: Uzay gemisine yaklaşınca uçuş modunu (kalkışı) başlatma.
 
 2. Uzay Uçuşu Modu Kontrolleri
-W: Gemiyi Hızlandırma (Hiper Sürücü)
-
-A, D: Meteorlardan kaçmak için evreni sola/sağa kaydırma.
+    W: Gemiyi Hızlandırma (Hiper Sürücü)
+    A, D: Meteorlardan kaçmak için uzay gemisini sola/sağa kaydırma.
 
 3. Dünya Dikey İniş Modu (TPP) Kontrolleri
-Space (Boşluk Çubuğu): Roket motorlarını ateşler. Düşüş ivmesini kırar, dikey hızı yavaşlatır ve geminin altından katmanlı jet alevi fışkırtır.
-
-A, D: Gemiyi yatay eksende sola ve sağa kaydırarak aşağıdaki sarı çizgili iniş rampasını ortalamayı sağlar.
+    Space (Boşluk Çubuğu): Roket motorlarını ateşler. Düşüş ivmesini kırar, dikey hızı yavaşlatır ve geminin altından katmanlı jet alevi fışkırtır.
+    A, D: Gemiyi yatay eksende sola ve sağa kaydırarak aşağıdaki sarı çizgili iniş rampasını ortalamayı sağlar.
 
 Genel Kontroller
 ESC: Oyundan çıkış yapar.
 
-📊 Başarı Kriterleri (Final Aşaması)
+### 📊 Başarı Kriterleri (Final Aşaması)
 Görevin başarıyla tamamlanabilmesi için uzay gemisi 12.0 irtifa sınırına ulaştığı anda:
 
 İniş hızının 1.5 M/S değerinden az olması gerekir (Yumuşak İniş).
